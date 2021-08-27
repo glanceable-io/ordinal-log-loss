@@ -18,7 +18,6 @@ from scipy.special import softmax
 from collections import Counter
 
 
-
 def evaluate_model(labels: List[int], preds: List[int]) -> dict:
     """
     Evaluate a train supervised model
@@ -55,6 +54,22 @@ def preprocess_function(examples):
     return tokenizer(examples[sentence1_key], examples[sentence2_key], truncation=True, padding='max_length', max_length=max_len)
 
 
+def get_distributions(distributions: list, labels: list, correct: bool):
+    """Return distributions either if the predictions are correct or incorrect
+
+    Args:
+        correct (bool): [description]
+    """
+    final_distributions = []
+
+    for dist, lab in zip(distributions, labels):
+        if int(np.argmax(dist)) == lab and correct:
+            final_distributions.append(dist)
+        if int(np.argmax(dist)) != lab and not correct:
+            final_distributions.append(dist)
+
+    return final_distributions
+
 
 if __name__ == '__main__':
     device = torch.device('cuda:0')
@@ -76,13 +91,14 @@ if __name__ == '__main__':
         max_len = datasets[dataset_file]["tok_len"]
         sentence1_key, sentence2_key = datasets[dataset_file]["task"]
         dist_matrix = datasets[dataset_file]["dist"]
-        data_path = f"{Path.home()}/glanceable-research/data/datasets/loss_research/{dataset_file}"
+
+        data_path = f"/home/francois/glanceable-research/data/datasets/loss_research/{dataset_file}"
         dataset = load_dataset('csv', data_files={'test':f"{data_path}/{dataset_file}_test.csv"})
         
-        models_path = f"{Path.home()}/glanceable-research/src/research/ordinal_loss_classification/output_models/{dataset_file}/saved_models"
+        models_path = f"/home/francois/glanceable-research/src/research/ordinal_loss_classification/output_models/{dataset_file}/saved_models"
         saved_models = np.sort(os.listdir(models_path))
         
-        model_checkpoint = "TO COMPLETE"
+        model_checkpoint = "/models/rating_classifier_en_v0"
                 
         tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
         model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint).to(device)
@@ -91,7 +107,7 @@ if __name__ == '__main__':
         encoded_dataset = dataset.map(preprocess_function, batched=True)
             
         batch_size = 16
-        predictions_test = []
+        predictions_test, distributions = [], []
         print("predicting")
         input_ids =  torch.tensor(encoded_dataset["test"]["input_ids"]).to(device)
         attention_mask = torch.tensor(encoded_dataset["test"]["attention_mask"]).to(device)
@@ -99,9 +115,14 @@ if __name__ == '__main__':
             input_ids_batch =  input_ids[k:k+batch_size]
             attention_mask_batch = attention_mask[k:k+batch_size]
             preds = model(input_ids=input_ids_batch, attention_mask=attention_mask_batch)
+            distributions.extend(softmax(preds.logits.cpu().detach().numpy(), axis=1).tolist())
             predictions_test.extend(preds.logits.argmax(dim=1).tolist())
             
-            
+        # Get the distributions with correct predictions
+        correct_distributions = get_distributions(distributions=distributions, labels=encoded_dataset["test"]["label"], correct=True)
+        # Get the distributions with incorrect predictions
+        incorrect_distributions = get_distributions(distributions=distributions, labels=encoded_dataset["test"]["label"], correct=False)
+
         dico_logs_ = {}
         evaluate_model(labels=encoded_dataset["test"]["label"], preds=predictions_test)
         
