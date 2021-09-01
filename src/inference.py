@@ -55,6 +55,11 @@ def preprocess_function(examples):
     return tokenizer(examples[sentence1_key], examples[sentence2_key], truncation=True, padding='max_length', max_length=max_len)
 
 
+def preprocess_function_unbatched(examples):
+    if sentence2_key is None:
+        return tokenizer(examples[sentence1_key], max_length=max_len)
+    return tokenizer(examples[sentence1_key], examples[sentence2_key], truncation=True, padding='max_length', max_length=max_len)
+
 
 if __name__ == '__main__':
     device = torch.device('cuda:0')
@@ -71,7 +76,7 @@ if __name__ == '__main__':
 
 
     # Loading the models
-    for dataset_file in ["sst5", "emotion"]:#list(datasets.keys()):
+    for dataset_file in ["sst5", "emotion","mnli"]:#list(datasets.keys()):
         num_classes = datasets[dataset_file]["num_classes"]
         max_len = datasets[dataset_file]["tok_len"]
         sentence1_key, sentence2_key = datasets[dataset_file]["task"]
@@ -88,9 +93,9 @@ if __name__ == '__main__':
         model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint).to(device)
         
 
-        encoded_dataset = dataset.map(preprocess_function, batched=True)
+        encoded_dataset = dataset.map(preprocess_function_unbatched, batched=False)
             
-        batch_size = 16
+        batch_size = 1
         predictions_test = []
         print("predicting")
         input_ids =  torch.tensor(encoded_dataset["test"]["input_ids"]).to(device)
