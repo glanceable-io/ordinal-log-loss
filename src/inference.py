@@ -43,8 +43,17 @@ def evaluate_model(labels: List[int], preds: List[int]) -> dict:
     dico_logs_["labels-f1_score"] = round(f1, 4)
     dico_logs_["labels-confusion_matrix"] = cm_labels
 
-    for k in np.sort(list(cnt.keys())):
+    for k in range(1,n_distances):
         dico_logs_[f"distance_{k}"] = round(cnt[k]/len(preds),4)
+
+    acc = acc_labels
+    for k in range(1,n_distances-1):
+        acc += cnt[k]/len(preds)
+        dico_logs_[f"off-by-{k}-accuracy"] = round(acc,4)
+
+    repartitions = Counter(preds)
+    for k in range(len(repartitions)):
+        dico_logs_[f"distrib-{k}"] = repartitions[k]
 
     return dico_logs_
 
@@ -57,7 +66,7 @@ def preprocess_function(examples):
 def preprocess_function_unbatched(examples):
     if sentence2_key is None:
         return tokenizer(examples[sentence1_key], max_length=max_len)
-    return tokenizer(examples[sentence1_key], examples[sentence2_key], truncation=True, padding='max_length', max_length=max_len)
+    return tokenizer(examples[sentence1_key], examples[sentence2_key],max_length=max_len)
 
 
 def get_distributions(distributions: list, labels: list, correct: bool):
@@ -81,19 +90,31 @@ if __name__ == '__main__':
     device = torch.device('cuda:0')
     datasets = {"mnli": {"num_classes": 3, "task": ("premise", "hypothesis"), "tok_len": 128,
                         "int2label": ["entailment","neutral","contradiction"],
-                        "dist": [[0,1,2],[1,0,1],[2,1,0]]},
+                        "dist": [[0,1,2],[1,0,1],[2,1,0]],
+                        "n_distances": 3},
                 "sst5": {"num_classes": 5, "task": ("sentence", None), "tok_len": 128,
                         "int2label": [1,2,3,4,5],
-                        "dist": [[0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0]]},
+                        "dist": [[0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0]],
+                        "n_distances": 5},
                 "emotion": {"num_classes": 6, "task": ("text", None), "tok_len": 128, 
                             "int2label": ["sadness", "joy", "love", "anger", "fear", "surprise"],
-                            "dist": [[0,2,2,1,1,2],[2,0,1,2,2,1],[2,1,0,2,2,1],[1,2,2,0,1,2],[1,2,2,1,0,2],[2,1,1,2,2,0]]}
+                            "dist": [[0,2,2,1,1,2],[2,0,1,2,2,1],[2,1,0,2,2,1],[1,2,2,0,1,2],[1,2,2,1,0,2],[2,1,1,2,2,0]],
+                        "n_distances": 3},
+                "amazon_reviews": {"num_classes": 5, "task": ("text", None), "tok_len": 128,
+                        "int2label": [1,2,3,4,5],
+                        "dist": [[0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0]],
+                        "n_distances": 5},
+                "yelp": {"num_classes": 5, "task": ("text", None), "tok_len": 128,
+                        "int2label": [1,2,3,4,5],
+                        "dist": [[0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0]],
+                        "n_distances": 5}
                 }
 
 
     # Loading the models
-    for dataset_file in ["sst5", "emotion","mnli"]:#list(datasets.keys()):
+    for dataset_file in ["mnli"]:#list(datasets.keys()):
         num_classes = datasets[dataset_file]["num_classes"]
+        n_distances = datasets[dataset_file]["n_distances"]
         max_len = datasets[dataset_file]["tok_len"]
         sentence1_key, sentence2_key = datasets[dataset_file]["task"]
         dist_matrix = datasets[dataset_file]["dist"]
@@ -101,35 +122,74 @@ if __name__ == '__main__':
         data_path = f"/home/francois/glanceable-research/data/datasets/loss_research/{dataset_file}"
         dataset = load_dataset('csv', data_files={'test':f"{data_path}/{dataset_file}_test.csv"})
         
-        models_path = f"/home/francois/glanceable-research/src/research/ordinal_loss_classification/output_models/{dataset_file}/saved_models"
+        model_dir = "prajjwal1/"
+        models_path = f"/home/francois/ordinal_loss_research/src/outputs_training/output_models/{dataset_file}/saved_models/{model_dir}"
         saved_models = np.sort(os.listdir(models_path))
+        dictpath = {}
+        for path in saved_models:
+            if dataset_file == "emotion":
+                if "CE" in path : 
+                    corrected_path = path[:20] + path[22:] + path[20:22]
+                else  : 
+                    corrected_path = path[:22] + path[24:] + path[22:24]
+            elif dataset_file == "mnli" or dataset_file == "sst5" or dataset_file == "yelp":
+                if "CE" in path : 
+                    corrected_path = path[:17] + path[19:] + path[17:19]
+                else  : 
+                    corrected_path = path[:19] + path[21:] + path[19:21]
+            elif dataset_file == "amazon_reviews":
+                if "CE" in path : 
+                    corrected_path = path[:27] + path[29:] + path[27:29]
+                else  : 
+                    corrected_path = path[:29] + path[31:] + path[29:31]
+
+            dictpath[corrected_path] = path
+
+        tokenizer = AutoTokenizer.from_pretrained("prajjwal1/bert-tiny")
         
-        model_checkpoint = "/models/rating_classifier_en_v0"
+        for path in np.sort(list(dictpath.keys())):
+            trained_model = dictpath[path]
+            if "-CE-" in  trained_model:
+                loss_func = "CE"
+            elif "-OLL2-" in  trained_model:
+                loss_func = "OLL2"
+            elif "-OLL1-" in  trained_model:
+                loss_func = "OLL1"
+
+            if "bert-tiny" in trained_model: 
+                pre_trained_model = f"{model_dir}bert-tiny"
                 
-        tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
-        model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint).to(device)
-        
-
-        encoded_dataset = dataset.map(preprocess_function_unbatched, batched=False)
+            #tokenizer = AutoTokenizer.from_pretrained(pre_trained_model)
+            model = AutoModelForSequenceClassification.from_pretrained(f"{models_path}/{trained_model}").to(device)
             
-        batch_size = 1
-        predictions_test, distributions = [], []
-        print("predicting")
-        input_ids =  torch.tensor(encoded_dataset["test"]["input_ids"]).to(device)
-        attention_mask = torch.tensor(encoded_dataset["test"]["attention_mask"]).to(device)
-        for k in tqdm(range(0,len(encoded_dataset["test"]),batch_size)):
-            input_ids_batch =  input_ids[k:k+batch_size]
-            attention_mask_batch = attention_mask[k:k+batch_size]
-            preds = model(input_ids=input_ids_batch, attention_mask=attention_mask_batch)
-            distributions.extend(softmax(preds.logits.cpu().detach().numpy(), axis=1).tolist())
-            predictions_test.extend(preds.logits.argmax(dim=1).tolist())
-            
-        # Get the distributions with correct predictions
-        #correct_distributions = get_distributions(distributions=distributions, labels=encoded_dataset["test"]["label"], correct=True)
-        # Get the distributions with incorrect predictions
-        #incorrect_distributions = get_distributions(distributions=distributions, labels=encoded_dataset["test"]["label"], correct=False)
 
-        dico_logs_ = {}
-        evaluate_model(labels=encoded_dataset["test"]["label"], preds=predictions_test)
+            encoded_dataset = dataset.map(preprocess_function_unbatched, batched=False)
+                
+            batch_size = 1
+            predictions_test, distributions = [], []
+            print("predicting")
+            #input_ids =  torch.tensor(encoded_dataset["test"]["input_ids"]).to(device)
+            #attention_mask = torch.tensor(encoded_dataset["test"]["attention_mask"]).to(device)
+            for k in tqdm(range(0,len(encoded_dataset["test"]),batch_size)):
+                inputs = {"input_ids": encoded_dataset["test"][k:k+batch_size]["input_ids"],"attention_mask": encoded_dataset["test"][k:k+batch_size]["attention_mask"],"token_type_ids": encoded_dataset["test"][k:k+batch_size]["token_type_ids"]}
+                preds = model(torch.tensor(inputs["input_ids"]).to(device), attention_mask = torch.tensor(inputs["attention_mask"]).to(device))
+                #preds = model(input_ids=input_ids_batch, attention_mask=attention_mask_batch)
+                distributions.extend(softmax(preds.logits.cpu().detach().numpy(), axis=1).tolist())
+                predictions_test.extend(preds.logits.argmax(dim=1).tolist())
+                
+            # Get the distributions with correct predictions
+            #correct_distributions = get_distributions(distributions=distributions, labels=encoded_dataset["test"]["label"], correct=True)
+            # Get the distributions with incorrect predictions
+            #incorrect_distributions = get_distributions(distributions=distributions, labels=encoded_dataset["test"]["label"], correct=False)
+            #a = 1
+            
+            dico_logs_ = {}
+            evaluate_model(labels=encoded_dataset["test"]["label"], preds=predictions_test)
+            
+            new_row = [dataset_file,loss_func,pre_trained_model,trained_model] + [dico_logs_[k] for k in dico_logs_.keys() if k != "labels-confusion_matrix"]
         
-        print(dico_logs_)
+            output_path_metrics = f'{Path.home()}/ordinal_loss_research/src/outputs_training/output_metrics/metrics_test_set_v2.csv'
+            with open(output_path_metrics, "a+") as f:
+                writer = csv.writer(f)
+                writer.writerow(new_row)
+            
