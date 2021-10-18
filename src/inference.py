@@ -1,8 +1,9 @@
 import os
+from typing_extensions import ParamSpecArgs
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
 from pathlib import Path
 import pandas as pd
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix, mean_absolute_error, mean_squared_error
 from typing import List, Tuple
 import numpy as np
 import time
@@ -13,7 +14,7 @@ home_path = Path.home()
 import torch
 import random
 from datasets import load_dataset
-from scipy.stats import entropy
+from scipy.stats import entropy, kendalltau
 from scipy.special import softmax
 from collections import Counter
 
@@ -42,6 +43,9 @@ def evaluate_model(labels: List[int], preds: List[int]) -> dict:
     dico_logs_["labels-recall"] = round(recall, 4)
     dico_logs_["labels-f1_score"] = round(f1, 4)
     dico_logs_["labels-confusion_matrix"] = cm_labels
+    
+
+
 
     for k in range(1,n_distances):
         dico_logs_[f"distance_{k}"] = round(cnt[k]/len(preds),4)
@@ -50,6 +54,10 @@ def evaluate_model(labels: List[int], preds: List[int]) -> dict:
     for k in range(1,n_distances-1):
         acc += cnt[k]/len(preds)
         dico_logs_[f"off-by-{k}-accuracy"] = round(acc,4)
+
+    dico_logs_["mae"] = mean_absolute_error(y_true=labels, y_pred=preds)
+    dico_logs_["mse"] = mean_squared_error(y_true=labels, y_pred=preds)
+    dico_logs_["kendalltau"], _ = kendalltau(labels,preds)
 
     repartitions = Counter(preds)
     for k in range(len(repartitions)):
@@ -88,7 +96,8 @@ def get_distributions(distributions: list, labels: list, correct: bool):
 
 if __name__ == '__main__':
     device = torch.device('cuda:0')
-    datasets = {"mnli": {"num_classes": 3, "task": ("premise", "hypothesis"), "tok_len": 128,
+    output_path_metrics = f'{Path.home()}/ordinal_loss_research/src/outputs_training/output_metrics/metrics_test_set_v4.csv'
+    datasets = {"snli": {"num_classes": 3, "task": ("premise", "hypothesis"), "tok_len": 128,
                         "int2label": ["entailment","neutral","contradiction"],
                         "dist": [[0,1,2],[1,0,1],[2,1,0]],
                         "n_distances": 3},
@@ -109,10 +118,10 @@ if __name__ == '__main__':
                         "dist": [[0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0]],
                         "n_distances": 5}
                 }
-
+    tokenizer = AutoTokenizer.from_pretrained("google/bert_uncased_L-2_H-128_A-2")
 
     # Loading the models
-    for dataset_file in ["mnli"]:#list(datasets.keys()):
+    for dataset_file in ["snli","amazon_reviews","sst5","yelp"]:#list(datasets.keys()):
         num_classes = datasets[dataset_file]["num_classes"]
         n_distances = datasets[dataset_file]["n_distances"]
         max_len = datasets[dataset_file]["tok_len"]
@@ -122,41 +131,76 @@ if __name__ == '__main__':
         data_path = f"/home/francois/glanceable-research/data/datasets/loss_research/{dataset_file}"
         dataset = load_dataset('csv', data_files={'test':f"{data_path}/{dataset_file}_test.csv"})
         
-        model_dir = "prajjwal1/"
+        model_dir = "google/"
         models_path = f"/home/francois/ordinal_loss_research/src/outputs_training/output_models/{dataset_file}/saved_models/{model_dir}"
         saved_models = np.sort(os.listdir(models_path))
         dictpath = {}
+        offset = 28
         for path in saved_models:
-            if dataset_file == "emotion":
-                if "CE" in path : 
-                    corrected_path = path[:20] + path[22:] + path[20:22]
-                else  : 
-                    corrected_path = path[:22] + path[24:] + path[22:24]
-            elif dataset_file == "mnli" or dataset_file == "sst5" or dataset_file == "yelp":
-                if "CE" in path : 
-                    corrected_path = path[:17] + path[19:] + path[17:19]
-                else  : 
-                    corrected_path = path[:19] + path[21:] + path[19:21]
-            elif dataset_file == "amazon_reviews":
-                if "CE" in path : 
-                    corrected_path = path[:27] + path[29:] + path[27:29]
-                else  : 
-                    corrected_path = path[:29] + path[31:] + path[29:31]
+            if "CE" in path : 
+                loss_len = 2
+            elif "OLL15" in path  or "SOFT2" in path or "SOFT3" in path or "SOFT4" in path or "nOLL2" in path: 
+                loss_len = 5
+            elif "SOFT10" in path : 
+                loss_len = 6
+            elif "WKL" in path : 
+                loss_len = 3
+            else  : 
+                loss_len = 4
+            n = len(dataset_file)+loss_len+offset
+            corrected_path = path[:n] + path[n+2:] + path[n:n+2]
 
             dictpath[corrected_path] = path
 
-        tokenizer = AutoTokenizer.from_pretrained("prajjwal1/bert-tiny")
         
+
+        if os.path.isfile(output_path_metrics):
+            dt = pd.read_csv(output_path_metrics, header=None, sep='\n')
+            dt = dt[0].str.split(',', expand=True)
+        else : 
+            dt = 5*['']
+
         for path in np.sort(list(dictpath.keys())):
             trained_model = dictpath[path]
+
+            if trained_model in list(dt[3]): 
+                continue
+
             if "-CE-" in  trained_model:
                 loss_func = "CE"
+                
+                
             elif "-OLL2-" in  trained_model:
                 loss_func = "OLL2"
+
+            elif "-nOLL2-" in  trained_model:
+                loss_func = "nOLL2"
+                
+                
             elif "-OLL1-" in  trained_model:
                 loss_func = "OLL1"
+                
+                
+            elif "-OLL15-" in  trained_model:
+                loss_func = "OLL1.5"
+                
+                
+            elif "-WKL-" in  trained_model:
+                loss_func = "WKL"
 
-            if "bert-tiny" in trained_model: 
+            elif "-SOFT10-" in  trained_model:
+                loss_func = "SOFT10"
+                
+            elif "-SOFT2-" in  trained_model:
+                loss_func = "SOFT2"
+            
+            elif "-SOFT3-" in  trained_model:
+                loss_func = "SOFT3"
+
+            elif "-SOFT4-" in  trained_model:
+                loss_func = "SOFT4"
+
+            if "bert-tiny" in trained_model or "bert_uncased_L-2_H-128_A-2" in trained_model: 
                 pre_trained_model = f"{model_dir}bert-tiny"
                 
             #tokenizer = AutoTokenizer.from_pretrained(pre_trained_model)
@@ -172,7 +216,7 @@ if __name__ == '__main__':
             #attention_mask = torch.tensor(encoded_dataset["test"]["attention_mask"]).to(device)
             for k in tqdm(range(0,len(encoded_dataset["test"]),batch_size)):
                 inputs = {"input_ids": encoded_dataset["test"][k:k+batch_size]["input_ids"],"attention_mask": encoded_dataset["test"][k:k+batch_size]["attention_mask"],"token_type_ids": encoded_dataset["test"][k:k+batch_size]["token_type_ids"]}
-                preds = model(torch.tensor(inputs["input_ids"]).to(device), attention_mask = torch.tensor(inputs["attention_mask"]).to(device))
+                preds = model(torch.tensor(inputs["input_ids"]).to(device), attention_mask = torch.tensor(inputs["attention_mask"]).to(device), token_type_ids = torch.tensor(inputs["token_type_ids"]).to(device))
                 #preds = model(input_ids=input_ids_batch, attention_mask=attention_mask_batch)
                 distributions.extend(softmax(preds.logits.cpu().detach().numpy(), axis=1).tolist())
                 predictions_test.extend(preds.logits.argmax(dim=1).tolist())
@@ -188,7 +232,7 @@ if __name__ == '__main__':
             
             new_row = [dataset_file,loss_func,pre_trained_model,trained_model] + [dico_logs_[k] for k in dico_logs_.keys() if k != "labels-confusion_matrix"]
         
-            output_path_metrics = f'{Path.home()}/ordinal_loss_research/src/outputs_training/output_metrics/metrics_test_set_v2.csv'
+            
             with open(output_path_metrics, "a+") as f:
                 writer = csv.writer(f)
                 writer.writerow(new_row)
