@@ -1,0 +1,38 @@
+{
+    "amazon_reviews": {
+        "dist": [[0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2], [3, 2, 1, 0, 1], [4, 3, 2, 1, 0]], 
+        "int2label": [1, 2, 3, 4, 5], 
+        "num_classes": 5, 
+        "task": ["text", null], 
+        "tok_len": 128,
+        "n_distances": 5,
+        "path" : "COMPLETE WITH THE PATH OF DIRECTORY WITH NAME 'amazon_reviews' CONTAINING TRAIN,VALIDATION AND TEST FILES"
+    },
+    "snli": {
+        "dist": [[0, 1, 2], [1, 0, 1], [2, 1, 0]],
+        "int2label": ["entailment", "neutral", "contradiction"], 
+        "num_classes": 3, 
+        "task": ["premise", "hypothesis"], 
+        "tok_len": 128,
+        "n_distances": 3,
+        "path" : "COMPLETE WITH THE PATH OF DIRECTORY WITH NAME 'snli' CONTAINING TRAIN,VALIDATION AND TEST FILES"
+    }, 
+    "sst5": {
+        "dist": [[0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2], [3, 2, 1, 0, 1], [4, 3, 2, 1, 0]], 
+        "int2label": [1, 2, 3, 4, 5], 
+        "num_classes": 5, 
+        "task": ["sentence", null], 
+        "tok_len": 128,
+        "n_distances": 5,
+        "path" : "COMPLETE WITH THE PATH OF DIRECTORY WITH NAME 'sst5' CONTAINING TRAIN,VALIDATION AND TEST FILES"
+    }, 
+    "yelp": {
+        "dist": [[0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2], [3, 2, 1, 0, 1], [4, 3, 2, 1, 0]], 
+        "int2label": [1, 2, 3, 4, 5], 
+        "num_classes": 5, 
+        "task": ["text", null], 
+        "tok_len": 128,
+        "n_distances": 5,
+        "path" : "COMPLETE WITH THE PATH OF DIRECTORY WITH NAME 'yelp' CONTAINING TRAIN,VALIDATION AND TEST FILES"
+    }
+}

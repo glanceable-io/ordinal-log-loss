@@ -3,7 +3,6 @@ from typing import Tuple, List
 import time
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, Trainer, TrainingArguments, EarlyStoppingCallback
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from pathlib import Path
 home_path = Path.home()
 import sys
@@ -18,10 +17,8 @@ import csv
 from datasets import load_dataset
 import random
 from torch.autograd import Variable
-from knockknock import slack_logs_sender
-import requests
-import json
 from collections import Counter
+import json
 
 
 
@@ -93,33 +90,15 @@ if __name__ == '__main__':
 
     device = torch.device('cuda:0')
 
-    datasets = {"mnli": {"num_classes": 3, "task": ("premise", "hypothesis"), "tok_len": 128,
-                        "int2label": ["entailment","neutral","contradiction"],
-                        "dist": [[0,1,2],[1,0,1],[2,1,0]]},
-                "snli": {"num_classes": 3, "task": ("premise", "hypothesis"), "tok_len": 128,
-                        "int2label": ["entailment","neutral","contradiction"],
-                        "dist": [[0,1,2],[1,0,1],[2,1,0]]},
-                "sst5": {"num_classes": 5, "task": ("sentence", None), "tok_len": 128,
-                        "int2label": [1,2,3,4,5],
-                        "dist": [[0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0]]},
-                "amazon_reviews": {"num_classes": 5, "task": ("text", None), "tok_len": 128,
-                        "int2label": [1,2,3,4,5],
-                        "dist": [[0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0]]},
-                "yelp": {"num_classes": 5, "task": ("text", None), "tok_len": 128,
-                        "int2label": [1,2,3,4,5],
-                        "dist": [[0,1,2,3,4],[1,0,1,2,3],[2,1,0,1,2],[3,2,1,0,1],[4,3,2,1,0]]},
-                "emotion": {"num_classes": 6, "task": ("text", None), "tok_len": 128, 
-                            "int2label": ["sadness", "joy", "love", "anger", "fear", "surprise"],
-                            "dist": [[0,2,2,1,1,2],[2,0,1,2,2,1],[2,1,0,2,2,1],[1,2,2,0,1,2],[1,2,2,1,0,2],[2,1,1,2,2,0]]}
-                }
+    with open(f"{Path.home()}/ordinal_loss_research/src/datasets.json","r") as f : 
+        datasets = json.load(f)
 
     learning_rates = [1e-4, 7.5e-5, 5e-5, 2.5e-5, 1e-5]
     losses = ["CE","OLL1","OLL15","OLL2","WKL","SOFT2","SOFT3","SOFT4"]
     datasets = ["snli","sst5","amazon_reviews","yelp"]
 
     start_time = time.time()
-    # Loading the data
-    # We import the data as a DatasetDict
+
     # Loading the model and tokenizer
     model_checkpoint = "google/bert_uncased_L-2_H-128_A-2"
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
@@ -130,9 +109,11 @@ if __name__ == '__main__':
                 max_len = datasets[data_file]["tok_len"]
                 sentence1_key, sentence2_key = datasets[data_file]["task"]
                 dist_matrix = datasets[data_file]["dist"]
+                directory_path = datasets[data_file]["path"] 
 
-                # Load the dataset
-                data_path = f"{Path.home()}/glanceable-research/data/datasets/loss_research/{data_file}"
+        
+                # Load the dataset as a DatasetDict
+                data_path = f"{directory_path}/{data_file}"
                 dataset = load_dataset('csv', data_files={'train':f"{data_path}/{data_file}_train.csv", "validation":f"{data_path}/{data_file}_validation.csv",'test':f"{data_path}/{data_file}_test.csv"})
                 
                 # Tokenize dataset
@@ -150,7 +131,7 @@ if __name__ == '__main__':
 
                 model_name = model_checkpoint+"-"+loss_type
                 for k in tqdm(range(1,6)):
-
+                    random.seed(k)
                     model_name = "-".join([model_checkpoint,data_file,loss_type,str(k)])
                     
                     #We check that the model has not already been trained 
@@ -158,7 +139,6 @@ if __name__ == '__main__':
                         continue
                     
                     #load model and initialize parameters
-                    random.seed(k)
                     model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels = num_classes).to(device)
                     model.dist_matrix = dist_matrix
 

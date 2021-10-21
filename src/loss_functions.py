@@ -5,6 +5,7 @@ import torch
 import sys
 import os
 sys.path.append(os.getcwd())
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from src.loss_functions import *
 
 
