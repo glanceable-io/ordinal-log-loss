@@ -18,3 +18,4 @@
 *output_metrics
 *data/datasets/loss_research*
 models
+*.json

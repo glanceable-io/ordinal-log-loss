@@ -46,7 +46,6 @@ class nOLL2Trainer(Trainer):
 class WKLTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
         num_classes = model.module.num_labels
-        dist_matrix = model.module.dist_matrix
         labels = inputs["labels"]
         outputs = model(**inputs)
         logits = outputs.logits
@@ -166,7 +165,7 @@ class OLL1Trainer(Trainer):
         label_ids = len(labels)*[[k for k in range(num_classes)]]
         distances = [[float(dist_matrix[true_labels[j][i]][label_ids[j][i]]) for i in range(num_classes)] for j in range(len(labels))]
         distances_tensor = torch.tensor(distances,device='cuda:0', requires_grad=True)
-        err = -torch.log(1-probas)*abs(distances_tensor)
+        err = -torch.log(1-probas)*distances_tensor
         loss = torch.sum(err,axis=1).mean()
         return (loss, outputs) if return_outputs else loss
 
@@ -182,7 +181,7 @@ class OLL15Trainer(Trainer):
         label_ids = len(labels)*[[k for k in range(num_classes)]]
         distances = [[float(dist_matrix[true_labels[j][i]][label_ids[j][i]]) for i in range(num_classes)] for j in range(len(labels))]
         distances_tensor = torch.tensor(distances,device='cuda:0', requires_grad=True)
-        err = -torch.log(1-probas)*abs(distances_tensor)**(1.5)
+        err = -torch.log(1-probas)*distances_tensor**(1.5)
         loss = torch.sum(err,axis=1).mean()
         return (loss, outputs) if return_outputs else loss
 
