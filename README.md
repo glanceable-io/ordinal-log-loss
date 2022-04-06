@@ -1,4 +1,4 @@
-# A new loss function for Ordinal Classification
+# Ordinal Log Loss - A simple loss function for Ordinal Classification
 
 This is the GitHub repository for the paper on a new loss function for ordinal classification.
 
