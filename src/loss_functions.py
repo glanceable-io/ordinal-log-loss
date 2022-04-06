@@ -184,5 +184,20 @@ class OLL15Trainer(Trainer):
         err = -torch.log(1-probas)*distances_tensor**(1.5)
         loss = torch.sum(err,axis=1).mean()
         return (loss, outputs) if return_outputs else loss
+    
+    
+class EMDTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        num_classes = model.module.num_labels
+        dist_matrix = model.module.dist_matrix
+        labels = inputs["labels"]
+        outputs = model(**inputs)
+        logits = outputs.logits
+        probas = F.softmax(logits,dim=1)
+        CDF_pred = torch.cumsum(probas,dim=1)
+        CDF_true = torch.tensor([labels[k].item()*[0.] + (num_classes-labels[k].item())*[1.] for k in range(len(labels))],device='cuda:0', requires_grad=True)
+        err = (CDF_pred - CDF_true)**2
+        loss = torch.sum(err,axis=1).mean()
+        return (loss, outputs) if return_outputs else loss
 
     
