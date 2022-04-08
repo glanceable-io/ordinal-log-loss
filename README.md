@@ -1,6 +1,9 @@
 # Ordinal Log Loss - A simple loss function for Ordinal Classification
 
-This is the GitHub repository for the paper on a new loss function for ordinal classification.
+This is the GitHub repository for the paper: 
+A simple log-based loss function for ordinal text classification
+
+This repository contains all the python code used to conduct the experiments reported in the paper. 
 
 ## Abstract
 The cross-entropy loss function is widely used and generally considered the default loss function for text classification. When it comes to ordinal text classification where there is an ordinal relationship between labels, the cross-entropy is not optimal as it does not incorporate the ordinal character into its feedback. In this paper, we propose a new simple loss function called ordinal log-loss (OLL). We show that this loss function outperforms state-of-the-art previously introduced losses on four benchmark text classification datasets. 
@@ -16,4 +19,8 @@ The experiments were done on 4 public datasets :
 
 ## Training
 
-## Inference
+### Pre-trained model
+The model used in our experiments is the (https://huggingface.co/google/bert_uncased_L-2_H-128_A-2)[google/bert_uncased_L-2_H-128_A-2] which is a tiny version of the BERT model. This model can be fetched directly from the HuggingFace Model Hub.
+
+### Losses 
+
