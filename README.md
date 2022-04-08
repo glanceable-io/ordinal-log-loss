@@ -10,6 +10,9 @@ The cross-entropy loss function is widely used and generally considered the defa
 **This repository contains all the python code used to conduct the experiments reported in the paper.**
 
 ---
+## Losses
+
+The losses used in the experiments have been coded in pytorch and can be found in the file : `\src\loss_functions.py`
 
 ## Datasets 
 
@@ -25,5 +28,5 @@ The experiments were done on 4 public datasets :
 ### Pre-trained model
 The model used in our experiments is the (https://huggingface.co/google/bert_uncased_L-2_H-128_A-2)[google/bert_uncased_L-2_H-128_A-2] which is a tiny version of the BERT model. This model can be fetched directly from the HuggingFace Model Hub.
 
-### Losses 
+
 
