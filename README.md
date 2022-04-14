@@ -13,7 +13,9 @@ The cross-entropy loss function is widely used and generally considered the defa
 ## Losses
 
 In the paper, we introduce a new loss called the Ordinal Log Loss (OLL). We show that this loss, in addition to being very simple, is particularly suited for classification tasks where labels are more or less close to each other (e.g. Movie review rating classification). 
-$$1 $$
+
+$$1+2$$
+
 The losses used in the experiments have been coded in pytorch and can be found in the file : `\src\loss_functions.py`
 
 ## Datasets 
