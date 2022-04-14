@@ -14,23 +14,33 @@ The cross-entropy loss function is widely used and generally considered the defa
 
 In the paper, we introduce a new loss called the Ordinal Log Loss (OLL). We show that this loss, in addition to being very simple, is particularly suited for classification tasks where labels are more or less close to each other (e.g. Movie review rating classification). 
 
-$$1+2$$
+For a N classes classification task, we define the L<sub>OLL-&alpha;</sub> loss (with &alpha; is a tuneable parameter)
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large\color{grey}\textbf{\mathcal{L}_{OLL-\alpha}(P,y) = -\sum_{i=1}^{N}\log(1-p_i) d(y,i)^\alpha}">
+where P = (p<sub>1</sub>, ..., p<sub>N</sub> ) is the output probability distribution of a network for a given prediction and d(y,i) is the distance between the true class y and the class i.
+
+We compare this loss to 5 other losses :
+* Cross Entropy Loss (CE)
+* Weighted Kappa Loss (WKL)
+* Soft Labels Loss (SOFT)
+* Earth Mover Distance Loss (EMD)
+* Coral Loss (CORAL)
 
 The losses used in the experiments have been coded in pytorch and can be found in the file : `\src\loss_functions.py`
 
 ## Datasets 
 
 The experiments were done on 4 public datasets : 
-* **SNLI** (Stanford Natural Language Inference): The Stanford Natural Language Inference (SNLI) corpus (version 1.0) is a collection of 570k human-written English sentence pairs manually labeled for balanced classification with the labels entailment, contradiction, and neutral. We aim for it to serve both as a benchmark for evaluating representational systems for text, especially including those induced by representation-learning methods, as well as a resource for developing NLP models of any kind. (source : https://nlp.stanford.edu/projects/snli/)
-* **SST-5** : Sentiment classification of sentences extracted from movie reviews. Each sentence is labelled as either negative, somewhat negative, neutral, somewhat positive or positive.  (source : https://nlp.stanford.edu/sentiment/)
-* **Amazon Reviews** : Sentiment classification of customer reviews on the Amazon website. Each sentence is labelled as either negative, somewhat negative, neutral, somewhat positive or positive.  (source : https://registry.opendata.aws/amazon-reviews-ml/)
-* **Yelp Reviews** : Sentiment classification of sentences extracted from the Yelp website. Each sentence is labelled as either negative, somewhat negative, neutral, somewhat positive or positive.  (source : https://www.yelp.com/dataset)
+* **[SNLI](https://nlp.stanford.edu/projects/snli/)** (Stanford Natural Language Inference): The Stanford Natural Language Inference (SNLI) corpus (version 1.0) is a collection of 570k human-written English sentence pairs manually labeled for balanced classification with the labels entailment, contradiction, and neutral. We aim for it to serve both as a benchmark for evaluating representational systems for text, especially including those induced by representation-learning methods, as well as a resource for developing NLP models of any kind.
+* **[SST-5](https://nlp.stanford.edu/sentiment/)** : Sentiment classification of sentences extracted from movie reviews. Each sentence is labelled as either negative, somewhat negative, neutral, somewhat positive or positive.
+* **[Amazon Reviews](https://registry.opendata.aws/amazon-reviews-ml/)** : Sentiment classification of customer reviews on the Amazon website. Each sentence is labelled as either negative, somewhat negative, neutral, somewhat positive or positive.
+* **[Yelp Reviews](https://www.yelp.com/dataset)** : Sentiment classification of sentences extracted from the Yelp website. Each sentence is labelled as either negative, somewhat negative, neutral, somewhat positive or positive.
 
 
 ## Training
 
 ### Pre-trained model
-The model used in our experiments is the (https://huggingface.co/google/bert_uncased_L-2_H-128_A-2)[google/bert_uncased_L-2_H-128_A-2] which is a tiny version of the BERT model. This model can be fetched directly from the HuggingFace Model Hub.
+The model used in our experiments is the [google/bert_uncased_L-2_H-128_A-2](https://huggingface.co/google/bert_uncased_L-2_H-128_A-2) which is a tiny version of the BERT model. This model can be fetched directly from the HuggingFace Model Hub.
 
 
 
