@@ -3,7 +3,7 @@
 This is the GitHub repository for the paper: 
 A simple log-based loss function for ordinal text classification
 
-### Paper Abstract
+## Paper Abstract
 The cross-entropy loss function is widely used and generally considered the default loss function for text classification. When it comes to ordinal text classification where there is an ordinal relationship between labels, the cross-entropy is not optimal as it does not incorporate the ordinal character into its feedback. In this paper, we propose a new simple loss function called ordinal log-loss (OLL). We show that this loss function outperforms state-of-the-art previously introduced losses on four benchmark text classification datasets. 
 
 
@@ -26,7 +26,7 @@ We compare this loss to 5 other losses :
 * [Earth Mover Distance Loss](https://arxiv.org/abs/1611.05916) (EMD)
 * [Coral Loss](https://github.com/Raschka-research-group/coral-cnn) (CORAL)
 
-The losses used in the experiments have been coded in pytorch and can be found in the file : `\src\loss_functions.py`
+The losses used in the experiments have been coded in pytorch and can be found in the file : `src/loss_functions.py`
 
 ## Datasets 
 
@@ -42,5 +42,12 @@ The experiments were done on 4 public datasets :
 ### Pre-trained model
 The model used in our experiments is the [google/bert_uncased_L-2_H-128_A-2](https://huggingface.co/google/bert_uncased_L-2_H-128_A-2) which is a tiny version of the BERT model. This model can be fetched directly from the HuggingFace Model Hub.
 
+### reproducibility
+All our experiments can be reproduced using the `src/training.py` and `src/fine_tuning.py` python scripts. 
+Every losses used in our paper are implemented in the `src/loss_functions.py` script (except the cross entropy which is already implemented in the pytorch library).
+
+Edit the `src/datasets.json` file with the coresponding path for the datasets your want your model to train on. 
+
+In `src/model_coral.py` we reimplemented the coral method as presented [here](https://github.com/Raschka-research-group/coral-cnn). 
 
 
