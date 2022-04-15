@@ -46,7 +46,7 @@ The model used in our experiments is the [google/bert_uncased_L-2_H-128_A-2](htt
 All our experiments can be reproduced using the `src/training.py` and `src/fine_tuning.py` python scripts. 
 Every losses used in our paper are implemented in the `src/loss_functions.py` script (except the cross entropy which is already implemented in the pytorch library).
 
-Edit the `src/datasets.json` file with the coresponding path for the datasets your want your model to train on. 
+Edit the `src/datasets.json` file with the coresponding path for the datasets you want your model to train on. 
 
 In `src/model_coral.py` we reimplemented the coral method as presented [here](https://github.com/Raschka-research-group/coral-cnn). 
 
