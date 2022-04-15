@@ -31,7 +31,7 @@ The losses used in the experiments have been coded in pytorch and can be found i
 ## Datasets 
 
 The experiments were done on 4 public datasets : 
-* **[SNLI](https://nlp.stanford.edu/projects/snli/)** (Stanford Natural Language Inference): The Stanford Natural Language Inference (SNLI) corpus (version 1.0) is a collection of 570k human-written English sentence pairs manually labeled for balanced classification with the labels entailment, contradiction, and neutral. We aim for it to serve both as a benchmark for evaluating representational systems for text, especially including those induced by representation-learning methods, as well as a resource for developing NLP models of any kind.
+* **[SNLI](https://nlp.stanford.edu/projects/snli/)** (Stanford Natural Language Inference): The Stanford Natural Language Inference (SNLI) corpus (version 1.0) is a collection of 570k human-written English sentence pairs manually labeled for balanced classification with the labels entailment, contradiction, and neutral. 
 * **[SST-5](https://nlp.stanford.edu/sentiment/)** : Sentiment classification of sentences extracted from movie reviews. Each sentence is labelled as either negative, somewhat negative, neutral, somewhat positive or positive.
 * **[Amazon Reviews](https://registry.opendata.aws/amazon-reviews-ml/)** : Sentiment classification of customer reviews on the Amazon website. Each sentence is labelled as either negative, somewhat negative, neutral, somewhat positive or positive.
 * **[Yelp Reviews](https://www.yelp.com/dataset)** : Sentiment classification of sentences extracted from the Yelp website. Each sentence is labelled as either negative, somewhat negative, neutral, somewhat positive or positive.
