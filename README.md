@@ -20,11 +20,11 @@ For a N classes classification task, we define the L<sub>OLL-&alpha;</sub> loss 
 where P = (p<sub>1</sub>, ..., p<sub>N</sub> ) is the output probability distribution of a network for a given prediction and d(y,i) is the distance between the true class y and the class i.
 
 We compare this loss to 5 other losses :
-* Cross Entropy Loss (CE)
-* Weighted Kappa Loss (WKL)
-* Soft Labels Loss (SOFT)
-* Earth Mover Distance Loss (EMD)
-* Coral Loss (CORAL)
+* [Cross Entropy Loss](https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html) (CE)
+* [Weighted Kappa Loss](https://www.sciencedirect.com/science/article/abs/pii/S0167865517301666?via%3Dihub) (WKL)
+* [Soft Labels Loss](https://openaccess.thecvf.com/content_CVPR_2019/html/Diaz_Soft_Labels_for_Ordinal_Regression_CVPR_2019_paper.html) (SOFT)
+* [Earth Mover Distance Loss](https://arxiv.org/abs/1611.05916) (EMD)
+* [Coral Loss](https://github.com/Raschka-research-group/coral-cnn) (CORAL)
 
 The losses used in the experiments have been coded in pytorch and can be found in the file : `\src\loss_functions.py`
 
