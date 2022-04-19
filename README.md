@@ -42,12 +42,49 @@ The experiments were done on 4 public datasets :
 ### Pre-trained model
 The model used in our experiments is the [google/bert_uncased_L-2_H-128_A-2](https://huggingface.co/google/bert_uncased_L-2_H-128_A-2) which is a tiny version of the BERT model. This model can be fetched directly from the HuggingFace Model Hub.
 
-### reproducibility
-All our experiments can be reproduced using the `src/training.py` and `src/fine_tuning.py` python scripts. 
-Every losses used in our paper are implemented in the `src/loss_functions.py` script (except the cross entropy which is already implemented in the pytorch library).
+### Reproducibility
+All our experiments can be reproduced. To do so, follow steps:
 
-Edit the `src/datasets.json` file with the coresponding path for the datasets you want your model to train on. 
+1. **Download datasets**
 
-In `src/model_coral.py` we reimplemented the coral method as presented [here](https://github.com/Raschka-research-group/coral-cnn). 
+All the datasets mentioned above can be downloaded from the [Hugging Face Datasets Hub](https://huggingface.co/datasets). 
+Once downloaded, edit the `src/datasets.json` with the corresponding path for each dataset:
+```
+"amazon_reviews": {
+        "dist": [[0, 1, 2, 3, 4], [1, 0, 1, 2, 3], [2, 1, 0, 1, 2], [3, 2, 1, 0, 1], [4, 3, 2, 1, 0]], 
+        "int2label": [1, 2, 3, 4, 5], 
+        "num_classes": 5, 
+        "task": ["text", null], 
+        "tok_len": 128,
+        "n_distances": 5,
+        "path" : "COMPLETE WITH THE PATH OF DIRECTORY WITH NAME 'amazon_reviews' CONTAINING TRAIN,VALIDATION AND TEST FILES"
+    }
+```
+For the *Amazon Reviews Dataset*, you should have a folder named `amazon_reviews` with in it the 3 following files: `amazon_reviews_train.csv`, `amazon_reviews_test.csv` and `amazon_reviews_validation.csv`.
+
+2. Training
+
+To train the model on the different parameters and loss functions introduced in our paper, run the `src/training.py` Python script. 
+
+The losses used for training: 
+```
+losses_dict = {"CE": Trainer,
+               "OLL1": OLL1Trainer,
+               "OLL15": OLL15Trainer,
+               "OLL2": OLL2Trainer,
+               "WKL": WKLTrainer,
+               "SOFT2": SOFT2Trainer,
+               "SOFT3": SOFT3Trainer,
+               "SOFT4": SOFT4Trainer,
+               "EMD": EMDTrainer,
+               "CORAL": Trainer}
+```
+are defined in the `src/loss_functions.py` file. 
+
+3. Evaluation
+
+Run the `scr/inference.py` file to evaluate the the model checkpoints generated during the training phase (corresponding to the different losses and parameters). It will output a csv file `src/outputs_training/output_metrics/metrics_test_set.csv` with all metrics introduced in our paper on the test sets. 
+
+**Note**: In `src/model_coral.py` we reimplemented the coral method as presented [here](https://github.com/Raschka-research-group/coral-cnn). 
 
 
