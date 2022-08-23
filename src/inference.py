@@ -129,7 +129,7 @@ if __name__ == '__main__':
                     loss_name = loss
                     continue
 
-            # we correct each path to have resluts sorted by dataset, loss, learning rate
+            # we correct each path to have results sorted by dataset, loss, learning rate
             n = len(dataset_file)+loss_len+offset
             corrected_path = path[:n] + path[n+2:] + path[n:n+2]
 
