@@ -1,6 +1,6 @@
 # Ordinal Log Loss - A simple loss function for Ordinal Classification
 
-This is the GitHub repository for the paper A simple log-based loss function for ordinal text classification accepted at COLING 2022.
+This is the GitHub repository for the paper [A simple log-based loss function for ordinal text classification](https://aclanthology.org/2022.coling-1.407/) accepted at COLING 2022.
 
 ## Paper Abstract
 The cross-entropy loss function is widely used and generally considered the default loss function for text classification. When it comes to ordinal text classification where there is an ordinal relationship between labels, the cross-entropy is not optimal as it does not incorporate the ordinal character into its feedback. In this paper, we propose a new simple loss function called ordinal log-loss (OLL). We show that this loss function outperforms state-of-the-art previously introduced losses on four benchmark text classification datasets. 
