@@ -86,4 +86,21 @@ Run the `scr/inference.py` file to evaluate the the model checkpoints generated 
 
 **Note**: In `src/model_coral.py` we reimplemented the coral method as presented [here](https://github.com/Raschka-research-group/coral-cnn). 
 
-
+## Citation
+If you found our code useful for your research, please consider citing it:
+```
+@inproceedings{castagnos-etal-2022-simple,
+    title = "A Simple Log-based Loss Function for Ordinal Text Classification",
+    author = "Castagnos, Fran{\c{c}}ois  and
+      Mihelich, Martin  and
+      Dognin, Charles",
+    booktitle = "Proceedings of the 29th International Conference on Computational Linguistics",
+    month = oct,
+    year = "2022",
+    address = "Gyeongju, Republic of Korea",
+    publisher = "International Committee on Computational Linguistics",
+    url = "https://aclanthology.org/2022.coling-1.407",
+    pages = "4604--4609",
+    abstract = "The cross-entropy loss function is widely used and generally considered the default loss function for text classification. When it comes to ordinal text classification where there is an ordinal relationship between labels, the cross-entropy is not optimal as it does not incorporate the ordinal character into its feedback. In this paper, we propose a new simple loss function called ordinal log-loss (OLL). We show that this loss function outperforms state-of-the-art previously introduced losses on four benchmark text classification datasets.",
+}
+```
