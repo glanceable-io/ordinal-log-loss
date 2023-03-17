@@ -50,9 +50,10 @@ def evaluate_model(labels: List[int], preds: List[int]) -> dict:
     for k in range(1, n_distances-1):
         acc += cnt[k]/len(preds)
         dico_logs_[f"off-by-{k}-accuracy"] = round(acc, 4)
-
-    dico_logs_["mae"] = mean_absolute_error(y_true=labels, y_pred=preds)
-    dico_logs_["mse"] = mean_squared_error(y_true=labels, y_pred=preds)
+    
+    distances_np = np.array(distances)
+    dico_logs_["mae"] = distances_np.sum()/len(distances_np)
+    dico_logs_["mse"] = (distances_np**2).sum()/len(distances_np)
     dico_logs_["kendalltau"], _ = kendalltau(labels, preds)
 
     repartitions = Counter(preds)
